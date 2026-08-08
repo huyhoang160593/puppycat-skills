@@ -6,15 +6,15 @@ Every lesson and reference document is a self-contained HTML file. Follow these 
 
 Pick fonts based on the **language of the lesson content**, not the code examples. The conversation language is the primary signal.
 
-| Language | Primary font | Fallback | Notes |
-|----------|-------------|----------|-------|
-| Vietnamese | `Noto Sans` | `Arial, sans-serif` | Covers all Vietnamese diacritics (ă, â, ê, ô, ơ, ư, and their tone marks). Avoid `Times New Roman` — it has poor rendering for Vietnamese accents at small sizes. |
-| English | `Inter` or `Noto Sans` | `system-ui, sans-serif` | Clean geometric sans-serif, excellent at all sizes. |
-| Japanese | `Noto Sans JP` | `Hiragino Sans, Meiryo, sans-serif` | Full CJK coverage. |
-| Chinese (Simplified) | `Noto Sans SC` | `PingFang SC, Microsoft YaHei, sans-serif` | |
-| Chinese (Traditional) | `Noto Sans TC` | `PingFang TC, Microsoft JhengHei, sans-serif` | |
-| Korean | `Noto Sans KR` | `Apple SD Gothic Neo, Malgun Gothic, sans-serif` | |
-| Code-heavy (any language) | `JetBrains Mono` or `Fira Code` | `Consolas, monospace` | Use for `<code>` and `<pre>` blocks only. |
+| Language                  | Primary font                        | Fallback                                           | Notes                                                                                                                                                                     |
+| ------------------------- | ----------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vietnamese                | `Noto Sans`                       | `Arial, sans-serif`                              | Covers all Vietnamese diacritics (ă, â, ê, ô, ơ, ư, and their tone marks). Avoid`Times New Roman` — it has poor rendering for Vietnamese accents at small sizes. |
+| English                   | `Inter` or `Noto Sans`          | `system-ui, sans-serif`                          | Clean geometric sans-serif, excellent at all sizes.                                                                                                                       |
+| Japanese                  | `Noto Sans JP`                    | `Hiragino Sans, Meiryo, sans-serif`              | Full CJK coverage.                                                                                                                                                        |
+| Chinese (Simplified)      | `Noto Sans SC`                    | `PingFang SC, Microsoft YaHei, sans-serif`       |                                                                                                                                                                           |
+| Chinese (Traditional)     | `Noto Sans TC`                    | `PingFang TC, Microsoft JhengHei, sans-serif`    |                                                                                                                                                                           |
+| Korean                    | `Noto Sans KR`                    | `Apple SD Gothic Neo, Malgun Gothic, sans-serif` |                                                                                                                                                                           |
+| Code-heavy (any language) | `JetBrains Mono` or `Fira Code` | `Consolas, monospace`                            | Use for`<code>` and `<pre>` blocks only.                                                                                                                              |
 
 When the lesson mixes languages (e.g. Vietnamese text with English code), set the **body** font to match the conversation language and use the code font inside `<code>` / `<pre>` tags.
 
