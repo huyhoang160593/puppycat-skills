@@ -1,122 +1,50 @@
 ---
 name: anytype-interactions
-description: How to interact with Anytype — the local-first knowledge platform. Rules, patterns, API methods, auth flow, and data model for writing scripts against the Anytype Agent Runtime.
+description: Complete workflow for Anytype — setup, credentials, script execution, data model, and API reference for the Anytype Agent Runtime.
 disable-model-invocation: true
 ---
 
 # Anytype Interactions
 
-## What is Anytype
+## Setup Wizard
 
-Anytype is a local-first, privacy-focused knowledge management platform. Everything in Anytype is an **object** with a **type**. Types define which properties an object can have. You can:
+Run these steps **in order** before executing any script. Stop and report to user if any step fails.
 
-- Create and manage **objects** (pages, notes, tasks, bookmarks, custom types)
-- Organize with **types** (define schemas with properties), **collections** (curated lists), and **tags**
-- **Search** across objects using full-text and semantic vector search
-- Build structured knowledge bases with typed properties (text, number, date, select, multi_select, checkbox, etc.)
-- Properties are **global** — a property key has one format across the entire space
+### Step 1: Find runtime
 
-This project uses the Anytype Agent Runtime (a Go-based JS engine) to execute JavaScript that interacts with the Anytype API through the `anytypeHelper` library.
+Check for `anytype-agent-runtime` in two places (in order):
 
-## Setup
+1. **PATH**: `which anytype-agent-runtime`
+2. **Known location** (absolute path):
+   - Linux/macOS: `$HOME/.local/bin/anytype-agent-runtime`
+   - Windows: `%USERPROFILE%\.local\bin\anytype-agent-runtime.exe`
 
-Before running scripts, check that `anytype-agent-runtime` is installed:
+If found at either → record the path, proceed to Step 2.
 
-```bash
-which anytype-agent-runtime
-```
+### Step 2: Install runtime (only if Step 1 found nothing)
 
-If not found, install it yourself: don't ask user to do it. If you are not sure about path -- just download the binary to the current folder and run it.
+**Ask the user first**: "anytype-agent-runtime is not installed. Should I download and install it?"
 
-```bash
-# Option 0: from github releases:
-# check https://github.com/anyproto/anytype-agent-runtime/releases, download binary for current OS and install to PATH.
-
-# Option 1: from source (requires Go)
-git clone https://github.com/anyproto/anytype-agent-runtime.git /tmp/anytype-agent-runtime
-cd /tmp/anytype-agent-runtime && go install . && cd -
-
-# Option 2: if the repo is already cloned locally
-cd /path/to/anytype-agent-runtime && go install . && cd -
-```
-
-After install, verify: `anytype-agent-runtime --help`
-
-It also worth checking github/releases to make sure that newest version is installed.
-
-## How to run JS
-
-Write a `.js` file that exports a `main()` function, then execute it. The `-m` flag makes a directory a module search path, so `anytypeHelper.js` in the skill folder is available as `import { createClient } from "anytypeHelper@v1"`.
+If yes:
 
 ```bash
-anytype-agent-runtime -m <path-to-skill-folder> my-script.js
+# Linux x86_64:
+curl -L -o ~/.local/bin/anytype-agent-runtime \
+  https://github.com/anyproto/anytype-agent-runtime/releases/latest/download/anytype-agent-runtime-linux-amd64
+# macOS arm64:
+curl -L -o ~/.local/bin/anytype-agent-runtime \
+  https://github.com/anyproto/anytype-agent-runtime/releases/latest/download/anytype-agent-runtime-darwin-arm64
+# macOS x86_64:
+curl -L -o ~/.local/bin/anytype-agent-runtime \
+  https://github.com/anyproto/anytype-agent-runtime/releases/latest/download/anytype-agent-runtime-darwin-amd64
+chmod +x ~/.local/bin/anytype-agent-runtime
 ```
 
-For example, if this skill is at `skills/anytype-interactions/`:
+**Verify**: `<runtime-path> --help` must succeed.
 
-```bash
-anytype-agent-runtime -m skills/anytype-interactions my-script.js
-```
+### Step 3: Credential check
 
-Pass arguments as key=value pairs:
-
-```bash
-anytype-agent-runtime -m skills/anytype-interactions my-script.js query="search term"
-```
-
-Read argument values from files with `key=@filepath`:
-
-```bash
-anytype-agent-runtime -m skills/anytype-interactions my-script.js body=@content.md
-```
-
-### Runtime output
-
-The runtime prints:
-- `trace: /tmp/anytype-trace-XXXX.json` — path to the full trace file
-- `res: <value>` — the return value of `main()`
-- `err: <message>` — error message if the script failed
-- Trace summary — a table of all effects (fetch calls, helper method calls, console.log)
-
-### Traces
-
-Every side effect is recorded in the **trace**. The trace is a JSON map: `{ effectName: { serializedInput: [outputs] } }`.
-
-Two levels of traces:
-- **Raw traces** (`fetch`, `fetchBatch`, `sleep`) — low-level HTTP calls with full request/response payloads. Useful for debugging API issues.
-- **Wrapped traces** (`anytypeHelper.getObjects`, `anytypeHelper.createObject`, etc.) — high-level helper method calls. These show what the helper did and what it returned. Much more useful for understanding script behavior.
-
-The trace file (`-t file` or the auto-generated temp file) contains everything. The CLI summary prints a condensed version. Use `console.log()` in your scripts — output appears in the trace under `console.log`.
-
-## MANDATORY RULES
-
-1. **ALWAYS use anytypeHelper client methods** — NEVER call fetch() directly to the Anytype API. The helper handles pagination, auth headers, error normalization, and tag creation.
-2. **NEVER hardcode credentials** — always use `env.ANYTYPE_API_URL`, `env.ANYTYPE_API_KEY`, `env.ANYTYPE_SPACE_ID`. These are loaded from the `.env` file automatically.
-3. **Check existing types first** — call `client.getTypes()` before creating a type. NEVER create types that already exist. Not all spaces have the same types — always check first.
-4. **`createObject(typeKey, data)` — first arg is a type KEY string**, not an object. Example: `client.createObject("page", { name: "My Page" })`
-5. **`createClient({ apiBaseUrl, apiKey, spaceId })` — use camelCase**, not snake_case. `apiKey` not `api_key`.
-
-## Standard Pattern
-
-```js
-import { createClient } from "anytypeHelper@v1";
-
-export function main() {
-  var client = createClient({
-    apiBaseUrl: env.ANYTYPE_API_URL,
-    apiKey: env.ANYTYPE_API_KEY,
-    spaceId: env.ANYTYPE_SPACE_ID
-  });
-  var objects = client.getObjects("page");
-  return objects;
-}
-```
-
-## Credentials & Authentication
-
-### If `.env` already exists
-
-The runtime reads `.env` from the **directory where you run the command** (your project workspace), not from the skill folder. Place `.env` in your project root, next to your scripts. Required variables:
+The runtime reads `.env` from the **current working directory** (project root, not skill folder). Required variables:
 
 ```
 ANYTYPE_API_URL=http://127.0.0.1:31009
@@ -124,22 +52,43 @@ ANYTYPE_API_KEY=your-api-key
 ANYTYPE_SPACE_ID=your-space-id
 ```
 
-### If no credentials exist — authentication flow
+Check if `.env` exists with all 3 variables:
 
-The Anytype API uses a challenge-based auth. The user must have the **Anytype Desktop app running**.
+- **All present** → proceed to Step 4.
+- **Missing variables** → tell user which variables are missing, stop.
+- **No `.env` at all** → proceed to [Authentication Flow](#authentication-flow) below.
 
-**Step 1:** Write and run a script to request a challenge. This triggers a 4-digit code display in the user's Anytype Desktop app:
+### Step 4: Credential confirmation (once per session)
+
+**Before first script in a session**, inform the user:
+
+> "Using Anytype credentials from `.env`:
+> - API URL: `ANYTYPE_API_URL`
+> - API Key: (redacted)
+> - Space ID: `ANYTYPE_SPACE_ID`
+>
+> Proceed?"
+
+After confirmation, **do not ask again** this session.
+
+### Authentication Flow
+
+Only when `.env` doesn't exist. **Anytype Desktop app must be running.**
+
+**Ask user first**: "No `.env` found. I need to set up credentials. You'll need to read a 4-digit code from your Anytype Desktop app. Ready?"
+
+Then execute via stdin pipe (see [How to Run JS](#how-to-run-js--stdin-pipe) below):
+
+**Auth Step 1 — Request challenge:**
 ```js
 import { requestChallenge } from "anytypeHelper@v1";
 export function main() {
   return requestChallenge({ baseUrl: env.ANYTYPE_API_URL || "http://127.0.0.1:31009" });
 }
 ```
-Run it: `anytype-agent-runtime -m <path-to-skill-folder> step1-challenge.js`
+Output includes `challenge_id`. **Ask the user to read the 4-digit code from their Anytype Desktop app.**
 
-The output includes `challenge_id`. **Ask the user to read the 4-digit code from their Anytype Desktop app.**
-
-**Step 2:** Write and run a script to solve the challenge with the user's code:
+**Auth Step 2 — Solve challenge:**
 ```js
 import { solveChallenge } from "anytypeHelper@v1";
 export function main() {
@@ -150,11 +99,9 @@ export function main() {
   });
 }
 ```
-Run it: `anytype-agent-runtime -m <path-to-skill-folder> step2-solve.js`
+Output includes `api_key`.
 
-The output includes `api_key`.
-
-**Step 3:** Write and run a script to list available spaces:
+**Auth Step 3 — List spaces:**
 ```js
 import { createClient } from "anytypeHelper@v1";
 export function main() {
@@ -162,60 +109,116 @@ export function main() {
   return client.listSpaces();
 }
 ```
-Run it: `anytype-agent-runtime -m <path-to-skill-folder> step3-spaces.js`
-
 Returns `{ ok: true, spaces: [{ id, name }, ...] }`. **Ask the user which space to use** if there are multiple. Or create a new one: `client.createSpace("My Space")`.
 
-**Step 4:** Write the `.env` file with the obtained credentials:
+**Auth Step 4 — Write `.env`:**
 ```
 ANYTYPE_API_URL=http://127.0.0.1:31009
 ANYTYPE_API_KEY=api-key-from-step-2
 ANYTYPE_SPACE_ID=space-id-from-step-3
 ```
 
-After this, all scripts will use these credentials automatically via `env.ANYTYPE_API_KEY` etc.
+After this, all scripts use credentials automatically via `env.ANYTYPE_API_KEY` etc. Return to [Step 4](#step-4-credential-confirmation-once-per-session) to confirm credentials with the user.
 
-## Sobek JS Engine
+## How to Run JS — Stdin Pipe
 
-- No async/await — everything is synchronous
-- ALWAYS use named imports: `import { createClient } from "anytypeHelper@v1"`
-- `fetch()` auto-parses JSON responses — use `resp.body` directly, NEVER `JSON.parse(resp.body)`
-- Use `console.log()` to debug — output appears in the trace
-- Use `var` or `const` — both work
-- Use `for` loops when in doubt — they always work
+**Never write script files to the workspace.** Pipe via stdin. The `-m` flag makes a directory a module search path for `anytypeHelper.js`.
 
-## Object Data Model
+### Basic pattern
 
-- `obj.name` — object name
-- `obj.id` — object ID for API calls
-- `obj.type` — an OBJECT, not a string: `obj.type.name` ("Page"), `obj.type.key` ("page")
-- Properties are directly on the object: `obj.genre`, `obj.rating`, `obj.status` — same level as `obj.name`
-- `getObjects()` and `search()` return objects **without** `markdown`. Call `getObject(id)` for full content.
-- `select`/`multi_select` values are tag **keys** (e.g. `"in_progress"`), not display names (e.g. `"In Progress"`). When writing, pass the display name — the helper resolves it. When reading, you always get the key.
+```bash
+echo 'export function main() { return "hello"; }' | <runtime-path> -m <path-to-skill-folder> -
+```
 
-## Types
+### With imports and arguments
 
-Always call `client.getTypes()` first to see what types exist in the space. Common types (vary by space):
+```bash
+printf '%s\n' \
+  'import { createClient } from "anytypeHelper@v1";' \
+  'export function main() {' \
+  '  var client = createClient({' \
+  '    apiBaseUrl: env.ANYTYPE_API_URL,' \
+  '    apiKey: env.ANYTYPE_API_KEY,' \
+  '    spaceId: env.ANYTYPE_SPACE_ID' \
+  '  });' \
+  '  return client.getObjects("page");' \
+  '}' \
+  | <runtime-path> -m <path-to-skill-folder> -
+```
+
+### Key syntax rules
+
+- `-` is the stdin sentinel — goes **after** `-m <path>`, **before** any `key=value` arguments
+- `key=value` arguments after `-` → `args.key` in `main(args)`
+- `printf` with `\n` for multi-line; `echo` for single-line
+
+### Runtime output
+
+The runtime prints:
+- `trace: /tmp/anytype-trace-XXXX.json` — full trace file path
+- `res: <value>` — return value of `main()`
+- `err: <message>` — error if script failed
+- Trace summary — table of all effects (fetch, helper calls, console.log)
+
+Every side effect is recorded in the trace file (`-t file` or auto-generated temp). Use `console.log()` — output appears in the trace.
+
+## Writing Scripts
+
+### Engine constraints (Sobek)
+
+- Synchronous only — no async/await
+- Named imports only: `import { createClient } from "anytypeHelper@v1"`
+- Use `anytypeHelper` methods — never `fetch()` directly (helper handles auth, pagination, errors)
+- `fetch()` auto-parses JSON — use `resp.body`, never `JSON.parse(resp.body)`
+- `console.log()` for debugging — output appears in the trace
+- `var` or `const` both work; `for` loops always work
+
+### Pre-flight checklist
+
+- □ Uses **anytypeHelper methods**, not raw `fetch()`
+- □ `createClient` uses **camelCase** (`apiKey`, not `api_key`)
+- □ `createObject` first arg is a **string type key** (`"page"`, not `{type: "page"}`)
+- □ Called `getTypes()` if creating new object types
+
+## Data Model
+
+### Objects
+
+- `obj.name`, `obj.id` — name and ID
+- `obj.type` — object (not string): `obj.type.name`, `obj.type.key`
+- Properties flattened onto object: `obj.genre`, `obj.rating` — same level as `obj.name`
+- `getObjects()`/`search()` return **no markdown** — call `getObject(id)` for full content
+- `select`/`multi_select` values are tag **keys** (e.g. `"in_progress"`), not display names. Writing accepts display names (helper resolves); reading returns keys.
+
+### Types
+
+Call `getTypes()` first. Common types (vary by space):
 
 | Key | Name | Layout | Notes |
 |-----|------|--------|-------|
 | `page` | Page | basic | Always available |
 | `note` | Note | note | May not exist in new spaces |
-| `task` | Task | action | May not exist — create with `client.createType({ key: "task", layout: "action" })` |
+| `task` | Task | action | Create with `createType({ key: "task", layout: "action" })` |
 | `bookmark` | Bookmark | bookmark | Always available |
 | `collection` | Collection | collection | Always available |
 | `set` | Query | set | Always available |
 
-If a type you need doesn't exist, create it with `client.createType()`. Use `client.describeType("typeKey")` to inspect a type's properties, tag values, and sample objects before writing to it.
+Missing type → `createType()`. Before writing to an unfamiliar type → `describeType("typeKey")` to inspect properties and tag values.
 
-Properties are **global** across the space — once a property key is created with a format, that format is locked for all types. Keys are normalized to snake_case by the API (`"myProp"` becomes `"my_prop"`). Always use the key from the API response, not what you passed in.
+### Properties
+
+Properties are **global** — one key, one format, space-wide. Keys normalized to snake_case (`"myProp"` → `"my_prop"`). Always use the key from the API response.
 
 ## anytypeHelper API Reference
 
-Read `anytypeHelper.md` in this skill folder for the full API reference including all client methods:
+Read `anytypeHelper.md` in this skill folder for the full API. Summary:
 
 **Queries:** getObjects, getObject, search, getTypes, getProperties, getProperty, describeType, getObjectsByTag, getCollectionObjects, listTags, listSpaces, getSpaceByName
 
 **Mutations:** createObject, updateObject, deleteObject, appendToObject, createType, addTag, setTags, createCollection, addToCollection, removeFromCollection, createSpace
 
-**Auth (standalone imports, not client methods):** requestChallenge, solveChallenge
+**Auth (standalone):** requestChallenge, solveChallenge
+
+## What is Anytype
+
+Local-first knowledge platform. Everything is an **object** with a **type**. Objects have typed properties (text, number, date, select, etc.) and are managed via the Anytype Agent Runtime (`anytypeHelper` library).

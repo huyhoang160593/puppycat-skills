@@ -9,6 +9,7 @@ Big thanks to [Matt Pocock](https://github.com/mattpocock/skills) for building a
 | Skill       | Description                                                                                                                      |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `teaching` | Fork of Matt Pocock's `teach` skill. Generates self-contained HTML lessons organized by subject, focused on long-term retention via retrieval practice and spacing |
+| `anytype-interactions` | Based on [anyproto/anytype-agents-skill](https://github.com/anyproto/anytype-agents-skill). Restructured as a proper skill with setup wizard, stdin-pipe execution, data model, and API reference. |
 
 ## Setup
 
