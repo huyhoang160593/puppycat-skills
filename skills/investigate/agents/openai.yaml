@@ -1,0 +1,5 @@
+interface:
+  display_name: "Investigate"
+  short_description: "Investigate a question against primary sources and write findings to the repo"
+policy:
+  allow_implicit_invocation: false
