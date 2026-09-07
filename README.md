@@ -1,3 +1,5 @@
+ 
+
 # puppycat-skills
 
 A collection of custom AI agent skills — created, refined, and curated for use across workspaces.
@@ -6,10 +8,10 @@ Big thanks to [Matt Pocock](https://github.com/mattpocock/skills) for building a
 
 ## Skills
 
-| Skill       | Description                                                                                                                      |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `teaching` | Fork of Matt Pocock's `teach` skill. Generates self-contained HTML lessons organized by subject, focused on long-term retention via retrieval practice and spacing |
-| `anytype-interactions` | Based on [anyproto/anytype-agents-skill](https://github.com/anyproto/anytype-agents-skill). Restructured as a proper skill with setup wizard, stdin-pipe execution, data model, and API reference. |
+| Skill                    | Description                                                                                                                                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `teaching`             | Fork of Matt Pocock's`teach` skill. Generates self-contained HTML lessons organized by subject, focused on long-term retention via retrieval practice and spacing                                |
+| `anytype-interactions` | Based on [anyproto/anytype-agents-skill](https://github.com/anyproto/anytype-agents-skill). Restructured as a proper skill with setup wizard, stdin-pipe execution, data model, and API reference. |
 
 ## Setup
 
@@ -18,6 +20,17 @@ Add skills from this repo to any workspace:
 ```bash
 npx skills@latest add huyhoang160593/puppycat-skills
 ```
+
+## Develop
+
+To test skills locally, sync them into your current workspace's `.agents/skills/`:
+
+```bash
+npm run sync:skills          # sync
+npm run sync:skills:dry      # preview (dry run)
+```
+
+This copies everything from `skills/` → `.agents/skills/`, replacing the target. Useful for iterating on a skill before publishing.
 
 ## License
 
