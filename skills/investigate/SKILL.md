@@ -1,12 +1,9 @@
 ---
 name: investigate
-description: >
-  Investigate a question against primary sources and write findings to the repo.
-  Use when the user asks for docs gathered, API facts checked, or a topic investigated.
+description: Investigate a question against primary sources and write findings to the repo. Use when the user asks for docs gathered, API facts checked, or a topic investigated.
 disable-model-invocation: true
 argument-hint: "What question should I investigate?"
 ---
-
 Spin up a **background agent** to do the investigation, so you keep working while it reads.
 
 Its job:
