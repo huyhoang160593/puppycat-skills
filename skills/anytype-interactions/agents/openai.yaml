@@ -1,0 +1,5 @@
+interface:
+  display_name: "Anytype Interactions"
+  short_description: "Setup, credentials, script execution, and API reference for Anytype Agent Runtime"
+policy:
+  allow_implicit_invocation: false
