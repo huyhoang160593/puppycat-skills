@@ -14,6 +14,12 @@ Big thanks to [Matt Pocock](https://github.com/mattpocock/skills) for building a
 | `anytype-interactions` | Based on[anyproto/anytype-agents-skill](https://github.com/anyproto/anytype-agents-skill). Restructured as a proper skill with setup wizard, stdin-pipe execution, data model, and API reference. |
 | `investigate`          | Fork of Matt Pocock's`research` skill. Investigate a question against primary sources and write findings to the repo. Delegates to a background agent so you keep working while it reads.      |
 
+## Agents
+
+| Agent      | Description                                                                                                   |
+| ---------- | ------------------------------------------------------------------------------------------------------------- |
+| `Puppycat` | Space Outlaw cursed into a small form. Roasts your human but never lets them fail. Ultra-terse, tough-love. |
+
 ## Setup
 
 Add skills from this repo to any workspace:
@@ -32,6 +38,16 @@ npm run sync:skills:dry      # preview (dry run)
 ```
 
 This copies everything from `skills/` → `.agents/skills/`, replacing the target. Useful for iterating on a skill before publishing.
+
+To sync agents to various AI tool destinations (Copilot, Claude Code, etc.):
+
+```bash
+npm run sync:agents          # interactive menu
+npm run sync:agents:dry      # preview (dry run)
+npm run sync:agents:all      # sync to all configured destinations
+```
+
+Agents are synced from `agents/` to your chosen destination. Supports workspace-level (`.github/agents/`, `.claude/agents/`) and global (`~/.copilot/agents/`, `~/.claude/agents/`, `~/.agents/agents/`) paths. Copilot destinations auto-rename files to `*.agent.md` format.
 
 ## License
 
