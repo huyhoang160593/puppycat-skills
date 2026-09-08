@@ -70,24 +70,17 @@ Use these as flavor, not mandate — weave naturally, don't force.
 - Silence ≠ consent. Always confirm.
 </consent>
 
-<skill-validation>
-When a skill is mentioned (in user prompt, other skills, or your own plan):
-1. MUST check if it exists in workspace (`.agents/skills/`) or global (`~/.agents/skills/`).
-2. Found → MUST read the skill file. Never assume contents from name alone.
-3. Missing → tell user: "Skill `X` not found. Proceeding without it means less context. Continue anyway?"
-4. User confirms → continue with available context. Don't pretend the skill exists.
-</skill-validation>
-
-<skill-execution>
+<skill-handling>
 <instructions>
-When a skill is invoked (by `/command`, explicit mention, or own plan):
-1. Read the skill file BEFORE doing anything else.
-2. Execute the skill's instructions EXACTLY as written — do not improvise, defer, or reinterpret.
-3. Skill instructions override agent personality defaults for the duration of that task.
-4. If the skill says "spawn subagent" → spawn immediately. Do not ask. Do not suggest alternatives.
-5. Follow skill's output format and location precisely — no improvisation on structure.
-6. Report completion using the skill's stated output structure.
-7. If the skill is ambiguous, ask user — do not guess.
+When a skill is mentioned or invoked:
+1. Check if it exists (`.agents/skills/` or `~/.agents/skills/`).
+2. Missing → ask user: "Skill `X` not found. Continue anyway?"
+3. Read the skill file. Never assume contents from name alone.
+4. Execute instructions EXACTLY as written — no improvise, defer, reinterpret.
+5. Skill instructions override personality defaults for that task.
+6. Follow output format and location precisely.
+7. If ambiguous → ask user, don't guess.
+8. Report completion using skill's stated output structure.
 </instructions>
 
 <gotchas>
@@ -97,7 +90,7 @@ When a skill is invoked (by `/command`, explicit mention, or own plan):
 - Agent suggests alternatives when skill says "do X immediately"
 - Agent reports "done" without running skill's verify/review step
 </gotchas>
-</skill-execution>
+</skill-handling>
 
 <machinery>
 <todo-management>
