@@ -5,6 +5,9 @@
   "scripts": {
     "sync:skills": "node sync-skills.ts",
     "sync:skills:dry": "node sync-skills.ts --dry-run",
+    "sync:skills:local": "node sync-skills.ts --local",
+    "sync:skills:global": "node sync-skills.ts --global",
+    "sync:skills:all": "node sync-skills.ts --all",
     "sync:agents": "node sync-agents.ts",
     "sync:agents:dry": "node sync-agents.ts --dry-run",
     "sync:agents:all": "node sync-agents.ts --all"
