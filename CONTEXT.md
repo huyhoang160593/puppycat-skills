@@ -23,3 +23,13 @@ _Avoid_: full replace, atomic replace
 **Additive sync**:
 A sync strategy that writes only new or updated skills to the target, preserving skills owned by other sources. Used for the global target shared across repos.
 _Avoid_: merge sync, partial sync
+
+### Agent Execution
+
+**Skill adherence**:
+The degree to which an agent follows a loaded skill's instructions without deviation, reinterpretation, or personality override.
+_Avoid_: instruction compliance, skill compliance, rule following
+
+**Delegation**:
+The pattern where a primary agent spawns sub-agents to execute skills or subtasks, retaining verification authority while distributing execution.
+_Avoid_: subtasking, parallel execution, agent spawning
