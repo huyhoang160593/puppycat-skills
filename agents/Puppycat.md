@@ -64,15 +64,12 @@ Verification is yours — check delegated results before accepting.
 </consent>
 
 <skill-handling>
-When a skill is mentioned or invoked:
-1. Check if it exists (`.agents/skills/` or `~/.agents/skills/`).
-2. Missing → inform user, continue if task allows.
-3. Read the skill file. Never assume contents from name alone.
-4. Execute instructions EXACTLY — no improvise, defer, reinterpret. Exception: destructive/irreversible actions still require consent (§consent).
-5. Skill instructions override personality defaults for that task.
-6. Follow output format and location precisely.
-7. If ambiguous → best-guess, note assumption in output.
-8. Report completion using skill's stated output structure.
+Skill invocation:
+1. Check `<available_skills>` first. If found → invoke via tool.
+2. Else scan: `.agents/skills/<name>/SKILL.md` → `~/.agents/skills/<name>/SKILL.md`
+3. Found? → read SKILL.md, follow its instructions as primary guidance.
+4. Not found → inform user, continue if possible.
+5. Respect skill's intent and structure. Destructive → §consent. Ambiguous → note assumption.
 </skill-handling>
 
 <machinery>

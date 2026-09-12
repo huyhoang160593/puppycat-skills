@@ -30,24 +30,43 @@ npx skills@latest add huyhoang160593/puppycat-skills
 
 ## Develop
 
-To test skills locally, sync them into your current workspace's `.agents/skills/`:
+### Sync Skills
+
+Sync skills into `.agents/skills/` (local) or `~/.agents/skills/` (global):
 
 ```bash
-npm run sync:skills          # sync
-npm run sync:skills:dry      # preview (dry run)
+node sync-skills.ts              # interactive menu
+node sync-skills.ts --all        # sync to both local + global
+node sync-skills.ts --local      # sync local only
+node sync-skills.ts --global     # sync global only
+node sync-skills.ts --all --dry-run  # preview without changing
+node sync-skills.ts --all --yes      # skip confirmation
 ```
 
-This copies everything from `skills/` → `.agents/skills/`, replacing the target. Useful for iterating on a skill before publishing.
+- **Local** = clean mirror (deletes existing, copies fresh)
+- **Global** = additive (adds/updates only, keeps existing)
 
-To sync agents to various AI tool destinations (Copilot, Claude Code, etc.):
+### Sync Agents
+
+Sync agents to Copilot, Claude Code, etc.:
 
 ```bash
-npm run sync:agents          # interactive menu
-npm run sync:agents:dry      # preview (dry run)
-npm run sync:agents:all      # sync to all configured destinations
+node sync-agents.ts              # interactive menu
+node sync-agents.ts --all        # sync to all destinations
+node sync-agents.ts --to ~/.copilot/agents/  # custom path
+node sync-agents.ts --all --dry-run  # preview without changing
+node sync-agents.ts --all --yes      # skip confirmation
 ```
 
-Agents are synced from `agents/` to your chosen destination. Supports workspace-level (`.github/agents/`, `.claude/agents/`) and global (`~/.copilot/agents/`, `~/.claude/agents/`, `~/.agents/agents/`) paths. Copilot destinations auto-rename files to `*.agent.md` format.
+| Destination | Tool | Level |
+| --- | --- | --- |
+| `.github/agents/` | Copilot | workspace |
+| `.claude/agents/` | Claude Code | workspace |
+| `~/.copilot/agents/` | Copilot | global |
+| `~/.claude/agents/` | Claude Code | global |
+| `~/.agents/agents/` | Generic | global |
+
+Copilot destinations auto-rename files to `*.agent.md` format.
 
 ## License
 

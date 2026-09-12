@@ -1,11 +1,19 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "types": ["node"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["*.ts"]
+  "include": [
+    "*.ts"
+  ],
+  "typeAcquisition": {
+    "enable": true,
+    "include": [
+      "node"
+    ]
+  },
 }
