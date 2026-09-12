@@ -1,12 +1,13 @@
 import { existsSync, readdirSync, statSync, copyFileSync, mkdirSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { homedir } from "node:os";
-import { createInterface } from "node:readline";
+import { createInterface, type Interface } from "node:readline";
 
 const SOURCE = resolve(import.meta.dirname!, "skills");
 const LOCAL_TARGET = resolve(import.meta.dirname!, ".agents", "skills");
 const GLOBAL_TARGET = join(homedir(), ".agents", "skills");
 const DRY_RUN = process.argv.includes("--dry-run");
+const FORCE_YES = process.argv.includes("--yes");
 
 // --- Flags: presence = run directly, no interactive ---
 const wantsLocal = process.argv.includes("--local");
@@ -37,27 +38,51 @@ function cleanMirror(target: string, skillNames: string[]) {
     rmSync(target, { recursive: true, force: true });
   }
   mkdirSync(target, { recursive: true });
+  let failed = 0;
   for (const name of skillNames) {
-    copyDirSync(join(SOURCE, name), join(target, name));
+    try {
+      copyDirSync(join(SOURCE, name), join(target, name));
+    } catch (err: any) {
+      console.error(`   ⚠️  Failed to copy "${name}": ${err.message}`);
+      failed++;
+    }
   }
+  if (failed > 0) console.error(`   ❌ ${failed}/${skillNames.length} skill(s) failed`);
 }
 
 function additiveSync(target: string, skillNames: string[]) {
   mkdirSync(target, { recursive: true });
+  let failed = 0;
   for (const name of skillNames) {
     const destPath = join(target, name);
-    if (existsSync(destPath)) {
-      rmSync(destPath, { recursive: true, force: true });
+    try {
+      if (existsSync(destPath)) {
+        rmSync(destPath, { recursive: true, force: true });
+      }
+      copyDirSync(join(SOURCE, name), destPath);
+    } catch (err: any) {
+      console.error(`   ⚠️  Failed to sync "${name}": ${err.message}`);
+      failed++;
     }
-    copyDirSync(join(SOURCE, name), destPath);
   }
+  if (failed > 0) console.error(`   ❌ ${failed}/${skillNames.length} skill(s) failed`);
+}
+
+// --- Singleton readline ---
+let rl: Interface | null = null;
+
+function getRl(): Interface {
+  if (!rl) rl = createInterface({ input: process.stdin, output: process.stdout });
+  return rl;
+}
+
+function closeRl() {
+  if (rl) { rl.close(); rl = null; }
 }
 
 async function prompt(question: string): Promise<string> {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
   return new Promise((res) => {
-    rl.question(question, (answer) => {
-      rl.close();
+    getRl().question(question, (answer) => {
       res(answer.trim().toLowerCase());
     });
   });
@@ -92,29 +117,39 @@ if (hasAnyFlag) {
   doGlobal = wantsGlobal || wantsAll;
 } else {
   // No flags → interactive
-  console.log(`\n🎯 Chọn target sync:`);
-  console.log(`   [1] Local  → ${LOCAL_TARGET}`);
-  console.log(`   [2] Global → ${GLOBAL_TARGET}`);
-  console.log(`   [3] Cả hai`);
-  const choice = await prompt(`   Chọn (1/2/3, mặc định 3): `);
-  doLocal = choice === "1" || choice === "3" || choice === "";
-  doGlobal = choice === "2" || choice === "3" || choice === "";
+  if (!process.stdin.isTTY) {
+    // Piped stdin: default to both targets, auto-confirm
+    doLocal = true;
+    doGlobal = true;
+  } else {
+    console.log(`\n🎯 Chọn target sync:`);
+    console.log(`   [1] Local  → ${LOCAL_TARGET}`);
+    console.log(`   [2] Global → ${GLOBAL_TARGET}`);
+    console.log(`   [3] Cả hai`);
+    const choice = await prompt(`   Chọn (1/2/3, mặc định 3): `);
+    doLocal = choice === "1" || choice === "3" || choice === "";
+    doGlobal = choice === "2" || choice === "3" || choice === "";
 
-  const targets: string[] = [];
-  if (doLocal) targets.push("Local");
-  if (doGlobal) targets.push("Global");
-  console.log(`\n📋 Sẽ sync ${sourceSkills.length} skill(s): ${sourceSkills.join(", ")}`);
-  console.log(`📁 Targets: ${targets.join(", ")}`);
-  if (DRY_RUN) console.log("🔍 Dry run — nothing will be changed.");
+    const targets: string[] = [];
+    if (doLocal) targets.push("Local");
+    if (doGlobal) targets.push("Global");
+    console.log(`\n📋 Sẽ sync ${sourceSkills.length} skill(s): ${sourceSkills.join(", ")}`);
+    console.log(`📁 Targets: ${targets.join(", ")}`);
+    if (DRY_RUN) console.log("🔍 Dry run — nothing will be changed.");
+    if (FORCE_YES) console.log("⚠️  --yes flag: skipping confirmation.");
 
-  const ok = await prompt("   Tiếp tục? (y/n, mặc định y): ");
-  if (ok !== "" && ok !== "y") {
-    console.log("❌ Đã hủy.");
-    process.exit(0);
+    const ok = FORCE_YES ? "y" : await prompt("   Tiếp tục? (y/n, mặc định y): ");
+    if (ok !== "" && ok !== "y" && ok !== "yes") {
+      console.log("❌ Đã hủy.");
+      closeRl();
+      process.exit(0);
+    }
   }
 }
 
 // --- Execute ---
+// Local = clean mirror (delete everything, copy fresh) — repo is source of truth
+// Global = additive (add/update only, keep existing) — may have custom skills not in repo
 const targets: { name: string; path: string; additive: boolean }[] = [];
 if (doLocal) targets.push({ name: "Local", path: LOCAL_TARGET, additive: false });
 if (doGlobal) targets.push({ name: "Global", path: GLOBAL_TARGET, additive: true });
@@ -153,3 +188,5 @@ for (const t of targets) {
 }
 
 console.log(`\n🎉 Done! Synced ${sourceSkills.length} skill(s) to ${targets.length} target(s).`);
+
+closeRl();

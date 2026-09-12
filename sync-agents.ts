@@ -1,5 +1,5 @@
-import { existsSync, readdirSync, statSync, copyFileSync, mkdirSync, rmSync, renameSync } from "node:fs";
-import { join, resolve, basename } from "node:path";
+import { existsSync, readdirSync, statSync, copyFileSync, mkdirSync, realpathSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { homedir } from "node:os";
 import { createInterface } from "node:readline";
 
@@ -62,11 +62,18 @@ const DESTINATIONS: Destination[] = [
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const SYNC_ALL = process.argv.includes("--all");
-const TO_FLAG = process.argv.includes("--to");
+const FORCE_YES = process.argv.includes("--yes") || process.argv.includes("-y");
 const TO_INDEX = process.argv.indexOf("--to");
-const CUSTOM_TO = TO_FLAG && TO_INDEX !== -1 ? process.argv[TO_INDEX + 1] : undefined;
+const CUSTOM_TO = TO_INDEX !== -1 ? process.argv[TO_INDEX + 1] : undefined;
+
+if (TO_INDEX !== -1 && !CUSTOM_TO) {
+  console.error("❌ --to requires a path argument. Use --to <path> or run without --to for interactive menu.");
+  process.exit(1);
+}
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
+
+const rl = createInterface({ input: process.stdin, output: process.stdout });
 
 function isAgentFile(file: string): boolean {
   return file.endsWith(".md");
@@ -77,12 +84,27 @@ function copyFileSync2(src: string, dest: string) {
   copyFileSync(src, dest);
 }
 
-async function ask(question: string): Promise<string> {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((res) => rl.question(question, (ans) => { rl.close(); res(ans.trim()); }));
+/**
+ * Robust path comparison: resolves symlinks, normalizes trailing slashes.
+ * Returns false if either path doesn't exist yet (can't compare real paths).
+ */
+function pathsMatch(a: string, b: string): boolean {
+  try {
+    return realpathSync(a) === realpathSync(b);
+  } catch {
+    return resolve(a) === resolve(b);
+  }
+}
+
+function ask(question: string): Promise<string> {
+  return new Promise((res) => rl.question(question, (ans) => res(ans.trim())));
 }
 
 async function confirmOverwrite(filePath: string): Promise<boolean> {
+  if (FORCE_YES) {
+    console.log(`  ⚠️  Overwriting existing file (forced): ${filePath}`);
+    return true;
+  }
   const ans = await ask(`⚠️  ${filePath} đã tồn tại. Ghi đè? (y/N) `);
   return ans.toLowerCase() === "y";
 }
@@ -117,14 +139,20 @@ console.log(`📁 Source: ${SOURCE}\n`);
 let selectedDests: Destination[];
 
 if (CUSTOM_TO) {
-  // --to flag: use custom path
-  selectedDests = [{
-    id: 0,
-    label: CUSTOM_TO,
-    path: resolve(CUSTOM_TO),
-    level: "workspace",
-    tool: "custom",
-  }];
+  // --to flag: reuse existing destination if path matches, otherwise create custom
+  const existing = DESTINATIONS.find((d) => pathsMatch(d.path, CUSTOM_TO));
+  if (existing) {
+    selectedDests = [existing];
+  } else {
+    const resolvedPath = resolve(CUSTOM_TO);
+    selectedDests = [{
+      id: 0,
+      label: CUSTOM_TO,
+      path: resolvedPath,
+      level: resolvedPath.startsWith(HOME) ? "global" : "workspace",
+      tool: "custom",
+    }];
+  }
 } else if (SYNC_ALL) {
   selectedDests = DESTINATIONS;
 } else {
@@ -150,8 +178,6 @@ if (CUSTOM_TO) {
   selectedDests = nums
     .map((n) => {
       if (n === DESTINATIONS.length + 1) {
-        const custom = ask("? Nhập đường dẫn: ");
-        // Note: this is sync-blocking but fine for a CLI tool
         return null; // handled below
       }
       return DESTINATIONS.find((d) => d.id === n);
@@ -161,13 +187,20 @@ if (CUSTOM_TO) {
   // Handle custom path selection
   if (nums.includes(DESTINATIONS.length + 1)) {
     const customPath = await ask("? Nhập đường dẫn custom: ");
-    selectedDests.push({
-      id: 0,
-      label: customPath,
-      path: resolve(customPath),
-      level: "workspace",
-      tool: "custom",
-    });
+    const existing = DESTINATIONS.find((d) => pathsMatch(d.path, customPath));
+    if (existing) {
+      // Reuse existing destination (preserves transformFilename, tool, level)
+      selectedDests.push(existing);
+    } else {
+      const resolvedPath = resolve(customPath);
+      selectedDests.push({
+        id: 0,
+        label: customPath,
+        path: resolvedPath,
+        level: resolvedPath.startsWith(HOME) ? "global" : "workspace",
+        tool: "custom",
+      });
+    }
   }
 
   if (selectedDests.length === 0) {
@@ -175,6 +208,9 @@ if (CUSTOM_TO) {
     process.exit(1);
   }
 }
+
+// Deduplicate by path
+selectedDests = [...new Map(selectedDests.map((d) => [d.path, d])).values()];
 
 // ─── Sync ──────────────────────────────────────────────────────────────────────
 
@@ -223,3 +259,5 @@ if (DRY_RUN) {
 } else {
   console.log(`\n✅ Done. Synced ${totalSynced} agent(s) across ${selectedDests.length} destination(s).`);
 }
+
+rl.close();
