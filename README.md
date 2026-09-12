@@ -28,7 +28,13 @@ Add skills from this repo to any workspace:
 npx skills@latest add huyhoang160593/puppycat-skills
 ```
 
-## Develop
+## Scripts
+
+> **Requires:** Node.js ≥ 23.6 (native `.ts` execution support)
+
+```bash
+node -v
+```
 
 ### Sync Skills
 
