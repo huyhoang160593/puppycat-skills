@@ -1,0 +1,5 @@
+interface:
+  display_name: "Copilot Grill with Docs"
+  short_description: "Copilot-compatible version of grill-with-docs. Relentless interview to sharpen a plan/design while creating ADRs and glossary."
+policy:
+  allow_implicit_invocation: false
