@@ -8,17 +8,17 @@ Big thanks to [Matt Pocock](https://github.com/mattpocock/skills) for building a
 
 ## Skills
 
-| Skill                    | Description                                                                                                                                                                                      |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `teaching`             | Fork of Matt Pocock's`teach` skill. Generates self-contained HTML lessons organized by subject, focused on long-term retention via retrieval practice and spacing                              |
-| `anytype-interactions` | Based on[anyproto/anytype-agents-skill](https://github.com/anyproto/anytype-agents-skill). Restructured as a proper skill with setup wizard, stdin-pipe execution, data model, and API reference. |
-| `investigate`          | Fork of Matt Pocock's`research` skill. Investigate a question against primary sources and write findings to the repo. Delegates to a background agent so you keep working while it reads.      |
-| `copilot-grill-with-docs` | Fork of Matt Pocock's `grill-with-docs` (Copilot-compatible: removes `disable-model-invocation: true`). Relentless interview to sharpen a plan/design while creating ADRs and glossary.                           |
+| Skill                       | Description                                                                                                                                                                                      |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `teaching`                | Fork of Matt Pocock's`teach` skill. Generates self-contained HTML lessons organized by subject, focused on long-term retention via retrieval practice and spacing                              |
+| `anytype-interactions`    | Based on[anyproto/anytype-agents-skill](https://github.com/anyproto/anytype-agents-skill). Restructured as a proper skill with setup wizard, stdin-pipe execution, data model, and API reference. |
+| `investigate`             | Fork of Matt Pocock's`research` skill. Investigate a question against primary sources and write findings to the repo. Delegates to a background agent so you keep working while it reads.      |
+| `copilot-grill-with-docs` | Fork of Matt Pocock's`grill-with-docs` (Copilot-compatible: removes `disable-model-invocation: true`). Relentless interview to sharpen a plan/design while creating ADRs and glossary.       |
 
 ## Agents
 
-| Agent      | Description                                                                                                   |
-| ---------- | ------------------------------------------------------------------------------------------------------------- |
+| Agent        | Description                                                                                                 |
+| ------------ | ----------------------------------------------------------------------------------------------------------- |
 | `Puppycat` | Space Outlaw cursed into a small form. Roasts your human but never lets them fail. Ultra-terse, tough-love. |
 
 ## Setup
@@ -65,13 +65,13 @@ node sync-agents.ts --all --dry-run  # preview without changing
 node sync-agents.ts --all --yes      # skip confirmation
 ```
 
-| Destination | Tool | Level |
-| --- | --- | --- |
-| `.github/agents/` | Copilot | workspace |
-| `.claude/agents/` | Claude Code | workspace |
-| `~/.copilot/agents/` | Copilot | global |
-| `~/.claude/agents/` | Claude Code | global |
-| `~/.agents/agents/` | Generic | global |
+| Destination            | Tool        | Level     |
+| ---------------------- | ----------- | --------- |
+| `.github/agents/`    | Copilot     | workspace |
+| `.claude/agents/`    | Claude Code | workspace |
+| `~/.copilot/agents/` | Copilot     | global    |
+| `~/.claude/agents/`  | Claude Code | global    |
+| `~/.agents/agents/`  | Generic     | global    |
 
 Copilot destinations auto-rename files to `*.agent.md` format.
 
