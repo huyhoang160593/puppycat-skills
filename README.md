@@ -16,9 +16,9 @@ Big thanks to [Matt Pocock](https://github.com/mattpocock/skills) for building a
 
 ## Agents
 
-| Agent        | Description                                                                                                 |
-| ------------ | ----------------------------------------------------------------------------------------------------------- |
-| `Puppycat` | Space Outlaw cursed into a small form. Roasts your human but never lets them fail. Ultra-terse, tough-love. |
+| Agent       | Description                                                                |
+| ----------- | -------------------------------------------------------------------------- |
+| `AGENTS.md` | Global base rule (gated persona + additive defaults). Source of truth for personal globals. |
 
 ## Setup
 
@@ -54,25 +54,24 @@ node sync-skills.ts --all --yes      # skip confirmation
 
 ### Sync Agents
 
-Sync agents to Copilot, Claude Code, etc.:
+Sync the global base rule (`agents/AGENTS.md`) to OpenCode + Ante globals:
 
 ```bash
-node sync-agents.ts              # interactive menu
-node sync-agents.ts --all        # sync to all destinations
-node sync-agents.ts --to ~/.copilot/agents/  # custom path
-node sync-agents.ts --all --dry-run  # preview without changing
-node sync-agents.ts --all --yes      # skip confirmation
+node sync-agents.ts              # sync to both globals (asks once)
+node sync-agents.ts --to <path>  # sync to a custom path
+node sync-agents.ts --dry-run    # preview without changing
+node sync-agents.ts --yes        # skip confirmation
+node sync-agents.ts --unsync     # delete from both globals (asks once)
+node sync-agents.ts --unsync --to <path>  # delete from a custom path
 ```
 
-| Destination            | Tool        | Level     |
-| ---------------------- | ----------- | --------- |
-| `.github/agents/`    | Copilot     | workspace |
-| `.claude/agents/`    | Claude Code | workspace |
-| `~/.copilot/agents/` | Copilot     | global    |
-| `~/.claude/agents/`  | Claude Code | global    |
-| `~/.agents/agents/`  | Generic     | global    |
+Unsync guard: only deletes targets identical to the source. Hand-modified
+files are skipped with a warning (delete manually or re-sync first).
 
-Copilot destinations auto-rename files to `*.agent.md` format.
+| Target                           | Tool     | Level  |
+| -------------------------------- | -------- | ------ |
+| `~/.config/opencode/AGENTS.md` | OpenCode | global |
+| `~/.ante/AGENTS.md` (`$ANTE_HOME` aware) | Ante | global |
 
 ## License
 
